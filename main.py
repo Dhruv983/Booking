@@ -112,10 +112,12 @@ class CourtBooker:
             chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
             os.environ['WDM_LOG_LEVEL'] = '0'
 
+        # Use the Chrome version from the environment
+        chrome_version = os.getenv('CHROME_VERSION')
         return webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
+            service=Service(ChromeDriverManager(version=chrome_version).install()),
             options=chrome_options
-        )
+    )
 
     def _take_screenshot(self, name):
         """Take a screenshot and save it to the screenshots directory."""
