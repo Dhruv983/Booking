@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Court Booking Status</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Court Booking Status</h1>
+    <div id="status-container"></div>
+    <script>
+        async function refreshStatus() {
+            const response = await fetch('status.json');
+            const data = await response.json();
+            
+            let html = `<table>
+                <tr>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Last Run</th>
+                </tr>`;
+            
+            data.forEach(entry => {
+                html += `<tr class="${entry.status.toLowerCase()}">
+                    <td>${entry.user}</td>
+                    <td>${entry.status}</td>
+                    <td>${entry.timestamp}</td>
+                </tr>`;
+            });
+            
+            document.getElementById('status-container').innerHTML = html;
+        }
+        
+        refreshStatus();
+        setInterval(refreshStatus, 60000); // Refresh every minute
+    </script>
+</body>
+</html>
