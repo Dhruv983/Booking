@@ -29,7 +29,7 @@ class CourtBooker:
         """
         self.user_prefix = user_prefix
         self.headless = headless
-        self.suppress_console = suppress_console
+        self.suppress_console = suppress_consoleoptions.add_argument
         self.take_screenshots = take_screenshots
         self.use_config_date = use_config_date
         self.logger = self._setup_logging(suppress_console)
@@ -105,7 +105,7 @@ class CourtBooker:
         """Initialize Chrome browser instance."""
         chrome_options = Options()
         if headless:
-            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("-headless")
         chrome_options.add_argument("--start-maximized")
 
         if suppress_console:
