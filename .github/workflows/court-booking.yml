@@ -84,7 +84,7 @@ jobs:
 
     - name: Run booking script
       run: |
-        python main.py --headless --quiet --screenshots
+        python main.py --headless --screenshots
 
     - name: Generate dashboard
       run: |
