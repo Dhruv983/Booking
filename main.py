@@ -113,7 +113,7 @@ class CourtBooker:
             os.environ['WDM_LOG_LEVEL'] = '0'
 
         # Use a stable ChromeDriver version
-        chrome_version = "114.0.5735.90"  # Match the Chrome version
+        chrome_version = "134.0.6998.35"  # Match the Chrome version
         return webdriver.Chrome(
             service=Service(ChromeDriverManager(version=chrome_version).install()),
             options=chrome_options
