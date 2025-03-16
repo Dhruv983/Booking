@@ -51,25 +51,6 @@ jobs:
         USER2_BOOKING_CELL_NUMBER: ${{ secrets.USER2_BOOKING_CELL_NUMBER }}
         USER2_BOOKING_REASON: ${{ secrets.USER2_BOOKING_REASON }}
 
-        # User 3
-        USER3_LOGIN_URL: ${{ secrets.USER3_LOGIN_URL }}
-        USER3_LOGIN_USERNAME: ${{ secrets.USER3_LOGIN_USERNAME }}
-        USER3_LOGIN_PASSWORD: ${{ secrets.USER3_LOGIN_PASSWORD }}
-        USER3_BOOKING_DATE: ${{ secrets.USER3_BOOKING_DATE }}
-        USER3_BOOKING_TIME: ${{ secrets.USER3_BOOKING_TIME }}
-        USER3_BOOKING_FACILITY: ${{ secrets.USER3_BOOKING_FACILITY }}
-        USER3_BOOKING_CELL_NUMBER: ${{ secrets.USER3_BOOKING_CELL_NUMBER }}
-        USER3_BOOKING_REASON: ${{ secrets.USER3_BOOKING_REASON }}
-
-        # User 4
-        USER4_LOGIN_URL: ${{ secrets.USER4_LOGIN_URL }}
-        USER4_LOGIN_USERNAME: ${{ secrets.USER4_LOGIN_USERNAME }}
-        USER4_LOGIN_PASSWORD: ${{ secrets.USER4_LOGIN_PASSWORD }}
-        USER4_BOOKING_DATE: ${{ secrets.USER4_BOOKING_DATE }}
-        USER4_BOOKING_TIME: ${{ secrets.USER4_BOOKING_TIME }}
-        USER4_BOOKING_FACILITY: ${{ secrets.USER4_BOOKING_FACILITY }}
-        USER4_BOOKING_CELL_NUMBER: ${{ secrets.USER4_BOOKING_CELL_NUMBER }}
-        USER4_BOOKING_REASON: ${{ secrets.USER4_BOOKING_REASON }}
       run: |
         echo "[USER1_LOGIN]" > config.ini
         echo "url = ${USER1_LOGIN_URL}" >> config.ini
@@ -96,31 +77,6 @@ jobs:
         echo "cell_number = ${USER2_BOOKING_CELL_NUMBER}" >> config.ini
         echo "booking_reason = ${USER2_BOOKING_REASON}" >> config.ini
         echo "" >> config.ini
-        
-        echo "[USER3_LOGIN]" >> config.ini
-        echo "url = ${USER3_LOGIN_URL}" >> config.ini
-        echo "username = ${USER3_LOGIN_USERNAME}" >> config.ini
-        echo "password = ${USER3_LOGIN_PASSWORD}" >> config.ini
-        echo "" >> config.ini
-        echo "[USER3_BOOKING]" >> config.ini
-        echo "date = ${USER3_BOOKING_DATE}" >> config.ini
-        echo "time = ${USER3_BOOKING_TIME}" >> config.ini
-        echo "facility = ${USER3_BOOKING_FACILITY}" >> config.ini
-        echo "cell_number = ${USER3_BOOKING_CELL_NUMBER}" >> config.ini
-        echo "booking_reason = ${USER3_BOOKING_REASON}" >> config.ini
-        echo "" >> config.ini
-        
-        echo "[USER4_LOGIN]" >> config.ini
-        echo "url = ${USER4_LOGIN_URL}" >> config.ini
-        echo "username = ${USER4_LOGIN_USERNAME}" >> config.ini
-        echo "password = ${USER4_LOGIN_PASSWORD}" >> config.ini
-        echo "" >> config.ini
-        echo "[USER4_BOOKING]" >> config.ini
-        echo "date = ${USER4_BOOKING_DATE}" >> config.ini
-        echo "time = ${USER4_BOOKING_TIME}" >> config.ini
-        echo "facility = ${USER4_BOOKING_FACILITY}" >> config.ini
-        echo "cell_number = ${USER4_BOOKING_CELL_NUMBER}" >> config.ini
-        echo "booking_reason = ${USER4_BOOKING_REASON}" >> config.ini
 
     - name: Run booking script
       run: |
