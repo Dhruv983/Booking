@@ -29,7 +29,7 @@ class CourtBooker:
         """
         self.user_prefix = user_prefix
         self.headless = headless
-        self.suppress_console = suppress_consoleoptions.add_argument
+        self.suppress_console = suppress_console
         self.take_screenshots = take_screenshots
         self.use_config_date = use_config_date
         self.logger = self._setup_logging(suppress_console)
