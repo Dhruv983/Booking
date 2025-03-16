@@ -30,7 +30,6 @@ jobs:
         pip install -r requirements.txt
 
     - name: Generate config file
-      - name: Generate config file
       env:
         # User 1
         USER1_LOGIN_URL: ${{ secrets.USER1_LOGIN_URL }}
