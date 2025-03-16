@@ -2,10 +2,10 @@ name: Court Booking Automation
 
 on:
   schedule:
-    # Run at 12:00:30 AM Newfoundland time (UTC-3:30)
-    # In UTC: 3:30:30 AM
-    - cron: '30 3 * * *'
-  workflow_dispatch:
+    - cron: '30 3 * * *'  # 3:30 UTC = 12:00 AM Newfoundland Time
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+  repository_dispatch:  # Allows API triggers
+    types: [manual_trigger]
 
 jobs:
   book-courts:
@@ -28,11 +28,11 @@ jobs:
       run: |
         sudo apt-get install -y libgbm-dev
         pip install --upgrade pip
-        pip install -r requirements.txt selenium webdriver-manager
+        pip install -r requirements.txt selenium webdriver-manager pytz
 
     - name: Generate config file
       env:
-        # User 1
+        # User 1 Configuration
         USER1_LOGIN_URL: ${{ secrets.USER1_LOGIN_URL }}
         USER1_LOGIN_USERNAME: ${{ secrets.USER1_LOGIN_USERNAME }}
         USER1_LOGIN_PASSWORD: ${{ secrets.USER1_LOGIN_PASSWORD }}
@@ -42,7 +42,7 @@ jobs:
         USER1_BOOKING_CELL_NUMBER: ${{ secrets.USER1_BOOKING_CELL_NUMBER }}
         USER1_BOOKING_REASON: ${{ secrets.USER1_BOOKING_REASON }}
 
-        # User 2
+        # User 2 Configuration
         USER2_LOGIN_URL: ${{ secrets.USER2_LOGIN_URL }}
         USER2_LOGIN_USERNAME: ${{ secrets.USER2_LOGIN_USERNAME }}
         USER2_LOGIN_PASSWORD: ${{ secrets.USER2_LOGIN_PASSWORD }}
@@ -52,6 +52,7 @@ jobs:
         USER2_BOOKING_CELL_NUMBER: ${{ secrets.USER2_BOOKING_CELL_NUMBER }}
         USER2_BOOKING_REASON: ${{ secrets.USER2_BOOKING_REASON }}
       run: |
+        # Config generation script remains the same
         echo "[USER1_LOGIN]" > config.ini
         echo "url = ${USER1_LOGIN_URL}" >> config.ini
         echo "username = ${USER1_LOGIN_USERNAME}" >> config.ini
@@ -79,7 +80,7 @@ jobs:
 
     - name: Run booking script
       run: |
-        python main.py --headless --screenshots
+        python main.py --headless --quiet --screenshots
 
     - name: Generate dashboard
       run: |
@@ -88,5 +89,6 @@ jobs:
     - name: Deploy Dashboard
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.PAT_TOKEN }}  # Using PAT instead of default token
         publish_dir: ./dashboard
+        keep_files: true  # Preserve previous deployment history
