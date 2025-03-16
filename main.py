@@ -115,8 +115,8 @@ class CourtBooker:
         # Use a stable ChromeDriver version
         chrome_version = "134.0.6998.35"  # Match the Chrome version
         return webdriver.Chrome(
-            service=Service(ChromeDriverManager(version=chrome_version).install()),
-            options=chrome_options
+        service=Service("/usr/local/bin/chromedriver"),
+        options=chrome_options
         )
 
     def _take_screenshot(self, name):
