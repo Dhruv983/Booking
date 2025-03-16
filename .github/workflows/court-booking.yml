@@ -7,6 +7,10 @@ on:
   repository_dispatch:  # Allows API triggers
     types: [manual_trigger]
 
+permissions:
+  actions: write
+  contents: write
+
 jobs:
   book-courts:
     runs-on: ubuntu-latest
@@ -92,3 +96,10 @@ jobs:
         github_token: ${{ secrets.PAT_TOKEN }}  # Using PAT instead of default token
         publish_dir: ./dashboard
         keep_files: true  # Preserve previous deployment history
+
+    - name: Debug Output
+      run: |
+        echo "Manual trigger received!"
+        echo "Event type: ${{ github.event_name }}"
+        echo "Triggered by: ${{ github.actor }}"
+        echo "Payload: ${{ toJson(github.event.client_payload) }}"
