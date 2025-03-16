@@ -102,7 +102,20 @@ class CourtBooker:
         return booking_config
 
     def _init_browser(self, headless, suppress_console):
-    s
+        """Initialize Chrome browser instance."""
+        chrome_options = Options()
+        if headless:
+            chrome_options.add_argument("--headless=new")  # Use new headless mode
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--start-maximized")
+
+        if suppress_console:
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+            os.environ['WDM_LOG_LEVEL'] = '0'
+
+        # Let Selenium automatically find ChromeDriver in PATH
+        return webdriver.Chrome(options=chrome_options)
 
     def _take_screenshot(self, name):
         """Take a screenshot and save it to the screenshots directory."""
