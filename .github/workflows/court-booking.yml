@@ -19,31 +19,16 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install Chrome
+    - name: Install Chrome and ChromeDriver
       uses: browser-actions/setup-chrome@v1
       with:
-        chrome-version: '114.0.5735.90'  # Use a stable version
-
-    - name: Get Chrome version
-      id: chrome-version
-      run: |
-        # Ensure Chrome is installed and accessible
-        if ! command -v google-chrome &> /dev/null; then
-          echo "Chrome is not installed. Installing now..."
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-        fi
-    
-        # Get Chrome version
-        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-        echo "CHROME_VERSION=${CHROME_VERSION}" >> $GITHUB_ENV
-        echo "Chrome version: ${CHROME_VERSION}"
+        chrome-version: '114.0.5735.90'
 
     - name: Install dependencies
       run: |
         sudo apt-get install -y libgbm-dev
         pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt selenium webdriver-manager
 
     - name: Generate config file
       env:

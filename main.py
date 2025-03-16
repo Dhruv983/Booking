@@ -102,22 +102,7 @@ class CourtBooker:
         return booking_config
 
     def _init_browser(self, headless, suppress_console):
-        """Initialize Chrome browser instance."""
-        chrome_options = Options()
-        if headless:
-            chrome_options.add_argument("-headless")
-        chrome_options.add_argument("--start-maximized")
-
-        if suppress_console:
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-            os.environ['WDM_LOG_LEVEL'] = '0'
-
-        # Use a stable ChromeDriver version
-        chrome_version = "134.0.6998.35"  # Match the Chrome version
-        return webdriver.Chrome(
-        service=Service("/usr/local/bin/chromedriver"),
-        options=chrome_options
-        )
+    s
 
     def _take_screenshot(self, name):
         """Take a screenshot and save it to the screenshots directory."""
