@@ -430,7 +430,7 @@ class CourtBooker:
             )
             if continue_buttons:
                 self.logger.info(f"Clicking continue button: '{continue_buttons[0].get_attribute('value') or continue_buttons[0].text}'")
-                #continue_buttons[0].click()
+                continue_buttons[0].click()
 
             self.logger.info("Booking finalized successfully")
             return True
