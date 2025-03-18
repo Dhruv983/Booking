@@ -55,6 +55,17 @@ jobs:
         USER2_BOOKING_FACILITY: ${{ secrets.USER2_BOOKING_FACILITY }}
         USER2_BOOKING_CELL_NUMBER: ${{ secrets.USER2_BOOKING_CELL_NUMBER }}
         USER2_BOOKING_REASON: ${{ secrets.USER2_BOOKING_REASON }}
+
+        # User 3 Configuration
+        USER3_LOGIN_URL: ${{ secrets.USER3_LOGIN_URL }}
+        USER3_LOGIN_USERNAME: ${{ secrets.USER3_LOGIN_USERNAME }}
+        USER3_LOGIN_PASSWORD: ${{ secrets.USER3_LOGIN_PASSWORD }}
+        USER3_BOOKING_DATE: ${{ secrets.USER3_BOOKING_DATE }}
+        USER3_BOOKING_TIME: ${{ secrets.USER3_BOOKING_TIME }}
+        USER3_BOOKING_FACILITY: ${{ secrets.USER3_BOOKING_FACILITY }}
+        USER3_BOOKING_CELL_NUMBER: ${{ secrets.USER3_BOOKING_CELL_NUMBER }}
+        USER3_BOOKING_REASON: ${{ secrets.USER3_BOOKING_REASON }}
+
       run: |
         # Config generation script remains the same
         echo "[USER1_LOGIN]" > config.ini
@@ -82,6 +93,19 @@ jobs:
         echo "cell_number = ${USER2_BOOKING_CELL_NUMBER}" >> config.ini
         echo "booking_reason = ${USER2_BOOKING_REASON}" >> config.ini
 
+        # User 3 Configuration
+        echo "[USER3_LOGIN]" >> config.ini
+        echo "url = ${USER3_LOGIN_URL}" >> config.ini
+        echo "username = ${USER3_LOGIN_USERNAME}" >> config.ini
+        echo "password = ${USER3_LOGIN_PASSWORD}" >> config.ini
+        echo "" >> config.ini
+        echo "[USER3_BOOKING]" >> config.ini
+        echo "date = ${USER3_BOOKING_DATE}" >> config.ini
+        echo "time = ${USER3_BOOKING_TIME}" >> config.ini
+        echo "facility = ${USER3_BOOKING_FACILITY}" >> config.ini
+        echo "cell_number = ${USER3_BOOKING_CELL_NUMBER}" >> config.ini
+        echo "booking_reason = ${USER3_BOOKING_REASON}" >> config.ini
+        
     - name: Run booking script
       run: |
         python main.py --headless --screenshots
