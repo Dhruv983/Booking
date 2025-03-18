@@ -2,7 +2,17 @@ name: Court Booking Automation
 
 on:
   schedule:
-    - cron: '32 2 * * *'  # 3:30 UTC = 12:00 AM Newfoundland Time
+    # 5 minutes before and 5 minutes after the original 2:32 AM cron time
+    - cron: '27 2 * * *'
+    - cron: '22 2 * * *'
+    - cron: '17 2 * * *'
+    - cron: '12 2 * * *'
+    - cron: '07 2 * * *'
+    - cron: '32 2 * * *'  # Original cron time
+    - cron: '37 2 * * *'
+    - cron: '42 2 * * *'
+    - cron: '47 2 * * *'
+    - cron: '52 2 * * *'
   workflow_dispatch:  # Allows manual trigger from GitHub UI
   repository_dispatch:  # Allows API triggers
     types: [manual_trigger]
