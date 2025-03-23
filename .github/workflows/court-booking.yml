@@ -110,12 +110,6 @@ jobs:
       run: |
         python main.py --headless --screenshots --max-workers=3
 
-    - name: Generate dashboard
-      run: |
-        python scripts/generate_dashboard.py
-      env:
-        GITHUB_RUN_NUMBER: ${{ github.run_number }}
-
     - name: Commit and push screenshots
       run: |
         current_date=$(date +%Y-%m-%d)
@@ -139,27 +133,18 @@ jobs:
         fi
 
     - name: Generate Dashboard
-      if: always()
       run: |
         python dashboard.py
-
-    - name: Deploy Dashboard
-      if: always()
-      run: |
-        git add dashboard/
-        if git diff --staged --quiet; then
-          echo "No dashboard changes to commit"
-        else
-          git commit -m "Update dashboard for workflow run ${GITHUB_RUN_NUMBER}"
-          git push
-        fi
-
-    - name: Deploy Dashboard
+      env:
+        REPO_NAME: ${{ github.event.repository.name }}
+  
+    - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.PAT_TOKEN }}  # Using PAT instead of default token
+        github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dashboard
-        keep_files: true  # Preserve previous deployment history
+        publish_branch: gh-pages
+        enable_jekyll: false
 
     - name: Debug Output
       run: |

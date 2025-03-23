@@ -6,10 +6,11 @@ from jinja2 import Environment, FileSystemLoader
 import glob
 
 class ScreenshotDashboard:
-    def __init__(self, screenshots_dir="screenshots"):
+    def __init__(self, screenshots_dir="screenshots", repo_name="Booking"):
         self.screenshots_dir = screenshots_dir
         self.template_dir = "templates"
         self.output_dir = "dashboard"
+        self.repo_name = repo_name
         
         # Create output directory if it doesn't exist
         os.makedirs(self.output_dir, exist_ok=True)
@@ -50,18 +51,21 @@ class ScreenshotDashboard:
                             # Get all screenshots for this user
                             screenshots = sorted(glob.glob(f"{user_dir}/*.png"))
                             
-                            # Create relative paths for screenshots
-                            rel_screenshots = [os.path.relpath(s, self.output_dir) for s in screenshots]
+                            # Create GitHub Pages compatible paths
+                            rel_screenshots = [
+                                f"/{self.repo_name}/screenshots/{os.path.relpath(s, self.screenshots_dir)}"
+                                for s in screenshots
+                            ]
                             data[date][user].extend(rel_screenshots)
                             
             except ValueError:
-                continue  # Skip invalid date directories
+                continue
                 
         return data
 
     def generate_dashboard(self):
         """Generate HTML dashboard."""
-        # Copy screenshots to dashboard directory
+        # Copy screenshots to output directory
         if os.path.exists(self.screenshots_dir):
             dest_screenshots = os.path.join(self.output_dir, "screenshots")
             if os.path.exists(dest_screenshots):
@@ -71,12 +75,13 @@ class ScreenshotDashboard:
         # Get screenshot data
         screenshot_data = self.get_screenshot_data()
 
-        # Create HTML template
+        # Update template with base URL handling
         template_content = """
 <!DOCTYPE html>
 <html>
 <head>
     <title>Booking Screenshots Dashboard</title>
+    <base href="/{{ repo_name }}/">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .date-section { margin-bottom: 30px; }
@@ -186,7 +191,7 @@ class ScreenshotDashboard:
         env = Environment(loader=FileSystemLoader(self.template_dir))
         template = env.get_template("dashboard.html")
         
-        dashboard_html = template.render(screenshots=screenshot_data)
+        dashboard_html = template.render(screenshots=screenshot_data, repo_name=self.repo_name)
         
         with open(os.path.join(self.output_dir, "index.html"), "w") as f:
             f.write(dashboard_html)
