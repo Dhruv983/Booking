@@ -1,20 +1,14 @@
 [
   {
-    "user": "USER1",
-    "status": "Pending",
-    "timestamp": "2025-03-23T01:34:18.225000",
-    "details": ""
-  },
-  {
     "user": "USER3",
     "status": "Pending",
-    "timestamp": "2025-03-23T01:35:00.756000",
+    "timestamp": "2025-03-23T01:47:04.244000",
     "details": ""
   },
   {
     "user": "USER2",
     "status": "Pending",
-    "timestamp": "2025-03-23T01:34:39.984000",
+    "timestamp": "2025-03-23T01:47:03.608000",
     "details": ""
   }
 ]
