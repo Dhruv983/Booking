@@ -395,7 +395,7 @@ class CourtBooker:
                         ".//div[contains(@class, 'result-header__description')]"
                     ).text
                     court_text = (court_title + " " + court_description).lower()
-                    
+                    slef.logger.info(f"------------------------Checking court: {court_text}")
                     # Calculate court score
                     score = 0
                     if facility_type in court_text:
@@ -414,8 +414,10 @@ class CourtBooker:
                             ".//a[contains(@class, 'cart-button')]"
                         )
                         
+                        
                         for slot in time_slots:
                             slot_text = slot.find_element(By.XPATH, ".//span[1]").text.strip()
+                            slef.logger.info(f"------------------------Checking time slots: {slot_text}")
                             slot_status = "success" if "error" not in slot.get_attribute("class") else "error"
                             
                             # Remove extra spaces and standardize format
