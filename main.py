@@ -594,7 +594,7 @@ class CourtBooker:
                 try:
                     confirmation_number = self.driver.find_element(
                         By.XPATH,
-                        "//*[contains(text(), 'Confirmation') or contains(text(), 'Reference')]/following::*[1]"
+                        "//div[@class='paragraph' and @id='webconfirmation_emailtext']//h3/text()"
                     ).text
                     self.logger.info(f"Booking confirmation number: {confirmation_number}")
                 except NoSuchElementException:
