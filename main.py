@@ -381,12 +381,6 @@ class CourtBooker:
             result_contents = self.driver.find_elements(By.CLASS_NAME, "result-content")
             self.logger.info(f"Found {len(result_contents)} court options")
 
-            # Find best matching court
-            best_match = None
-            best_score = -1
-            best_slot = None
-            best_time = None
-
             for court_div in result_contents:
                 try:
                     court_title = court_div.find_element(By.XPATH, ".//h2/span").text
@@ -399,43 +393,34 @@ class CourtBooker:
                     # Calculate court score
                     score = 0
                     if facility_type in court_text:
-                        score += 100
-                        if court_number and f"{facility_type} {court_number}" in court_text:
-                            score += 50
-                        if "badminton" in facility_type and "badminton" in court_text:
-                            score += 30
-                        if "pickle" in facility_type and "pickle" in court_text:
-                            score += 30
-
-                    if score > 0:
-                        # Look for the specific time slot
-                        time_slots = court_div.find_elements(
-                            By.XPATH,
-                            ".//a[contains(@data-tooltip, 'Book Now')]"  # Get all slots with data-tooltip
-                        )
-
-                        for slot in time_slots:
-                            slot_text = slot.find_element(By.XPATH, ".//span[1]").text.strip()
-                            self.logger.info(f"------------------------Checking time slots: {slot_text}")
-                            # Check if the slot is available (not having 'Unavailable' tooltip)
-                            slot_status = "success" if slot.get_attribute("data-tooltip") != "Unavailable" else "error"
-                            
-                            # Remove extra spaces and standardize format
-                            slot_text = ' '.join(slot_text.split())
-                            
-                            if slot_text.lower() == target_time_slot.lower() and slot_status == "success":
-                                if score > best_score:
-                                    best_score = score
-                                    best_match = court_title
-                                    best_slot = slot
-                                    best_time = slot_text
-                                    break
+                        if any(keyword in facility_type for keyword in ["badminton", "pickle"]):
+                            if any(keyword in court_text for keyword in ["badminton", "pickle"]):
+                                # Look for the specific time slot
+                                time_slots = court_div.find_elements(
+                                    By.XPATH,
+                                    ".//a[contains(@data-tooltip, 'Book Now')]"  # Get all slots with data-tooltip
+                                )
+                                for slot in time_slots:
+                                    slot_text = slot.text.strip()
+                                    self.logger.info(f"------------------------Checking time slots: {slot_text}")
+                                    # Check if the slot is available (not having 'Unavailable' tooltip)
+                                    slot_status = "success" if slot.get_attribute("data-tooltip") != "Unavailable" else "error"
+                                    
+                                    # Remove extra spaces and standardize format
+                                    slot_text = ' '.join(slot_text.split())
+                                    self.logger.info(f"------------------------Checking time slots: {slot_text}")
+                                    
+                                    if slot_status == "success" and is_matching_time_slot(target_time_slot, slot_text):
+                                        self.logger.info(f"Found matching slot: {slot_text}")
+                                        best_slot=slot
+                                        break
+                        
 
                 except NoSuchElementException:
                     continue
 
-            if best_match and best_slot:
-                self.logger.info(f"Selected court: {best_match} at {best_time}")
+            if best_slot:
+                self.logger.info(f"Selected court: {best_time}")
                 self._take_screenshot("selected_court")
                 best_slot.click()
                 time.sleep(1)
@@ -792,6 +777,66 @@ def main():
         print(f"{user}: {status}")
         if error:
             print(f"  └─ Error: {error.splitlines()[0]}")
+
+
+def is_matching_time_slot(start_time_str, time_range_str):
+    """
+    Determine if a start time matches a given time range for a one-hour slot.
+    
+    Args:
+        start_time_str (str): Starting time (e.g., "6:00pm", "6:00 pm")
+        time_range_str (str): Time range (e.g., "6:00 pm - 7:00 pm")
+    
+    Returns:
+        bool: True if the start time represents the same one-hour slot as the time range
+    """
+    # Normalize strings by removing extra spaces and converting to lowercase
+    start_time = start_time_str.lower().replace(" ", "")
+    time_range = time_range_str.lower().replace(" ", "")
+    
+    # Parse start_time to extract hour and am/pm
+    if ":" in start_time:
+        start_hour_str = start_time.split(":")[0]
+        start_period = "am" if "am" in start_time else "pm"
+    else:
+        # Handle case without colon
+        digit_part = ''.join(filter(str.isdigit, start_time))
+        start_hour_str = digit_part
+        start_period = "am" if "am" in start_time else "pm"
+    
+    start_hour = int(start_hour_str)
+    
+    # Convert to 24-hour format
+    if start_period == "pm" and start_hour < 12:
+        start_hour += 12
+    elif start_period == "am" and start_hour == 12:
+        start_hour = 0
+    
+    # Calculate end hour (one hour later)
+    end_hour = (start_hour + 1) % 24
+    
+    # Format back to 12-hour for comparison
+    start_hour_12 = start_hour if start_hour <= 12 else start_hour - 12
+    start_hour_12 = 12 if start_hour_12 == 0 else start_hour_12
+    
+    end_hour_12 = end_hour if end_hour <= 12 else end_hour - 12
+    end_hour_12 = 12 if end_hour_12 == 0 else end_hour_12
+    
+    end_period = "am" if end_hour < 12 else "pm"
+    
+    # Create normalized expected time range patterns to check against
+    # Format 1: "6:00pm-7:00pm"
+    expected_pattern1 = f"{start_hour_12}:00{start_period}-{end_hour_12}:00{end_period}"
+    # Format 2: "6pm-7pm"
+    expected_pattern2 = f"{start_hour_12}{start_period}-{end_hour_12}{end_period}"
+    
+    # Remove all spaces for comparison
+    normalized_range = time_range.replace(" ", "")
+    
+    # Check if the normalized time range matches any of our expected patterns
+    return (expected_pattern1 in normalized_range or 
+            expected_pattern2 in normalized_range or
+            f"{start_hour_12}:00{start_period}" in normalized_range.split("-")[0])
 
 
 if __name__ == "__main__":
