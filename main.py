@@ -420,7 +420,7 @@ class CourtBooker:
                     continue
 
             if best_slot:
-                self.logger.info(f"Selected court: {best_slot.text()}")
+                self.logger.info(f"Selected court: {best_slot.text}")
                 self._take_screenshot("selected_court")
                 best_slot.click()
                 time.sleep(1)
