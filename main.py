@@ -13,6 +13,9 @@ import os
 from datetime import datetime, timedelta
 import pytz
 import argparse
+import concurrent.futures
+from typing import Dict, List, Tuple
+import traceback
 
 
 class CourtBooker:
@@ -35,7 +38,6 @@ class CourtBooker:
         self.logger = self._setup_logging(suppress_console)
         self.config = self._load_config()
         self.logged_in = False
-        self.screenshots_dir = f"screenshots/{self.user_prefix}"
         self.driver = self._init_browser(headless, suppress_console)
         self.wait = WebDriverWait(self.driver, 10)
 
@@ -118,15 +120,35 @@ class CourtBooker:
         return webdriver.Chrome(options=chrome_options)
 
     def _take_screenshot(self, name):
-        """Take a screenshot and save it to the screenshots directory."""
+        """Take a screenshot and save it to the screenshots directory with thread-safe structure."""
         if not self.take_screenshots:
             return
-        if not os.path.exists(self.screenshots_dir):
-            os.makedirs(self.screenshots_dir)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        screenshot_path = os.path.join(self.screenshots_dir, f"{name}_{timestamp}.png")
-        self.driver.save_screenshot(screenshot_path)
-        self.logger.info(f"Screenshot saved: {screenshot_path}")
+            
+        try:
+            # Create date-based directory structure with process ID for parallel safety
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            workflow_run = os.environ.get('GITHUB_RUN_NUMBER', 'local_run')
+            process_id = os.getpid()
+            screenshot_path = os.path.join(
+                'screenshots', 
+                current_date, 
+                f'workflow_{workflow_run}',
+                f'process_{process_id}',
+                self.user_prefix
+            )
+            
+            # Create directories if they don't exist
+            os.makedirs(screenshot_path, exist_ok=True)
+            
+            # Save screenshot with timestamp and random suffix for uniqueness
+            timestamp = datetime.now().strftime("%H%M%S")
+            random_suffix = os.urandom(4).hex()  # Add random suffix to prevent naming conflicts
+            file_path = os.path.join(screenshot_path, f"{name}_{timestamp}_{random_suffix}.png")
+            
+            self.driver.save_screenshot(file_path)
+            self.logger.info(f"Screenshot saved: {file_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to take screenshot {name}: {str(e)}")
 
     def execute_booking(self):
         """Main execution flow for the booking process."""
@@ -155,22 +177,27 @@ class CourtBooker:
         try:
             login_info = self.config['login']
             self.driver.get(login_info['url'])
+            self._take_screenshot("login_page")  # Add screenshot before login
 
             # Login form interaction
             self.wait.until(EC.presence_of_element_located((By.ID, 'weblogin_username'))).send_keys(login_info['username'])
             self.driver.find_element(By.ID, 'weblogin_password').send_keys(login_info['password'])
+            self._take_screenshot("login_form_filled")  # Add screenshot after filling form
             self.driver.find_element(By.ID, 'weblogin_buttonlogin').click()
 
             # Handle session warnings
             try:
                 self.wait.until(EC.presence_of_element_located((By.ID, 'loginresumesession_buttoncontinue'))).click()
+                self._take_screenshot("session_warning")  # Add screenshot if session warning appears
             except TimeoutException:
                 pass
 
             self.logged_in = True
+            self._take_screenshot("login_success")  # Add screenshot after successful login
             self.logger.info("Login successful")
             return True
         except Exception as e:
+            self._take_screenshot("login_error")  # Add screenshot on login error
             self.logger.error(f"Login failed: {str(e)}")
             return False
 
@@ -178,21 +205,28 @@ class CourtBooker:
         """Navigate to the booking page and clear any existing selections."""
         try:
             self.logger.info("Navigating to booking page")
+            self._take_screenshot("pre_navigation")  # Add screenshot before navigation
+            
             field_house_link = self.wait.until(
                 EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'tile')]//h2[contains(text(), 'Field House Courts')]/ancestor::a"))
             )
             field_house_link.click()
+            
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Facility Search')]")))
+            self._take_screenshot("booking_page")  # Add screenshot after navigation
             self.logger.info("Booking page loaded successfully")
             return True
         except Exception as e:
+            self._take_screenshot("navigation_error")  # Add screenshot on navigation error
             self.logger.error(f"Failed to navigate to booking page: {str(e)}")
             return False
+
     def _select_date(self):
         """Select the desired booking date using the dropdown selectors."""
         try:
             desired_date = self.config['booking']['date']
             self.logger.info(f"Selecting date: {desired_date}")
+            self._take_screenshot("pre_date_selection")  # Add screenshot before date selection
 
             # Open datepicker
             date_picker_button = self.wait.until(
@@ -227,10 +261,13 @@ class CourtBooker:
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(@id, 'frwebsearch_buttonsearch')]"))
             )
             search_button.click()
+            time.sleep(1)  # Brief wait for UI update
+            self._take_screenshot("post_date_selection")  # Add screenshot after date selection
 
             self.logger.info(f"Date {desired_date} selected successfully")
             return True
         except Exception as e:
+            self._take_screenshot("date_selection_error")  # Add screenshot on date selection error
             self.logger.error(f"Failed to select date: {str(e)}")
             return False
 
@@ -300,6 +337,8 @@ class CourtBooker:
             selected_slot, slot_time = best_court['slots'][0]
             self.logger.info(f"Clicking on time slot: {slot_time}")
             selected_slot.click()
+            time.sleep(1)  # Brief wait for UI update
+            self._take_screenshot("time_slot_selected")  # Add screenshot after slot selection
 
             # Handle additional confirmation
             try:
@@ -325,6 +364,7 @@ class CourtBooker:
             return True
 
         except (TimeoutException, NoSuchElementException) as e:
+            self._take_screenshot("court_selection_error")  # Add screenshot on court selection error
             self.logger.error(f"Failed to select court and time: {str(e)}")
             return False
 
@@ -391,6 +431,7 @@ class CourtBooker:
                             'slots': available_slots
                         }
                         self.logger.info(f"Found candidate court: {court_title} (Score: {score}) with {len(available_slots)} matching slots")
+                        self._take_screenshot("available_courts")  # Add screenshot of available courts
 
             except NoSuchElementException as e:
                 self.logger.info(f"Error examining court: {str(e)}")
@@ -402,6 +443,8 @@ class CourtBooker:
         """Complete the booking process by confirming the reservation."""
         try:
             self.logger.info("Confirming booking")
+            self._take_screenshot("pre_finalization")  # Add screenshot before finalization
+            
             add_to_cart_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'multiselectlist__addbutton') and .//span[contains(text(), 'Add To Cart')]]")))
             add_to_cart_button.click()
 
@@ -421,6 +464,7 @@ class CourtBooker:
             reason_field = self.wait.until(EC.presence_of_element_located((By.XPATH, "//input[@id='question150906642']")))
             reason_field.clear()
             reason_field.send_keys(booking_reason)
+            self._take_screenshot("booking_form_filled")  # Add screenshot of filled form
 
             # Proceed to checkout
             continue_buttons = self.driver.find_elements(
@@ -431,10 +475,13 @@ class CourtBooker:
             if continue_buttons:
                 self.logger.info(f"Clicking continue button: '{continue_buttons[0].get_attribute('value') or continue_buttons[0].text}'")
                 continue_buttons[0].click()
+                time.sleep(1)  # Brief wait for UI update
+                self._take_screenshot("booking_confirmed")  # Add screenshot of confirmation
 
             self.logger.info("Booking finalized successfully")
             return True
         except Exception as e:
+            self._take_screenshot("finalization_error")  # Add screenshot on finalization error
             self.logger.error(f"Failed to finalize booking: {str(e)}")
             return False
 
@@ -533,12 +580,38 @@ def get_valid_users():
     return users
 
 
+def process_user(user: str, args: argparse.Namespace) -> Tuple[str, bool, str]:
+    """
+    Process booking for a single user.
+    
+    Args:
+        user: User prefix
+        args: Command line arguments
+        
+    Returns:
+        Tuple of (user, success boolean, error message if any)
+    """
+    try:
+        booker = CourtBooker(
+            user_prefix=user,
+            headless=args.headless,
+            suppress_console=args.quiet,
+            take_screenshots=args.screenshots,
+            use_config_date=args.use_config_date
+        )
+        success = booker.execute_booking()
+        return user, success, ""
+    except Exception as e:
+        error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
+        return user, False, error_msg
+
 def main():
     parser = argparse.ArgumentParser(description="Multi-user Court Booking System")
     parser.add_argument("--headless", action="store_true", help="Run in headless mode")
     parser.add_argument("--quiet", action="store_true", help="Suppress console output")
     parser.add_argument("--screenshots", action="store_true", help="Enable screenshots")
     parser.add_argument("--use-config-date", action="store_true", help="Use config dates")
+    parser.add_argument("--max-workers", type=int, default=3, help="Maximum number of parallel bookings")
     args = parser.parse_args()
 
     # Get all valid users from the config file
@@ -547,22 +620,36 @@ def main():
         print("No valid user configurations found")
         return
 
-    results = {}
-    for user in users:
-        print(f"\nProcessing booking for {user}")
-        booker = CourtBooker(
-            user_prefix=user,
-            headless=args.headless,
-            suppress_console=args.quiet,
-            take_screenshots=args.screenshots,
-            use_config_date=args.use_config_date
-        )
-        results[user] = booker.execute_booking()
+    results: Dict[str, Tuple[bool, str]] = {}
+    
+    print(f"Starting parallel booking for {len(users)} users with {args.max_workers} workers")
+    
+    # Use ThreadPoolExecutor for parallel processing
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+        # Submit all booking tasks
+        future_to_user = {
+            executor.submit(process_user, user, args): user 
+            for user in users
+        }
+        
+        # Process completed tasks as they finish
+        for future in concurrent.futures.as_completed(future_to_user):
+            user, success, error = future.result()
+            results[user] = (success, error)
+            status = "Success" if success else "Failed"
+            print(f"\nBooking {status} for {user}")
+            if error:
+                print(f"Error details for {user}:\n{error}")
 
-    # Print booking results
-    print("\nBooking Results:")
-    for user, success in results.items():
-        print(f"{user}: {'Success' if success else 'Failed'}")
+    # Print final summary
+    print("\nBooking Results Summary:")
+    success_count = sum(1 for success, _ in results.values() if success)
+    print(f"Total Success: {success_count}/{len(users)}")
+    for user, (success, error) in results.items():
+        status = "✅ Success" if success else "❌ Failed"
+        print(f"{user}: {status}")
+        if error:
+            print(f"  └─ Error: {error.splitlines()[0]}")
 
 
 if __name__ == "__main__":

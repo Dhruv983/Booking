@@ -2,17 +2,7 @@ name: Court Booking Automation
 
 on:
   schedule:
-    # 5 minutes before and 5 minutes after the original 2:32 AM cron time
-    - cron: '27 2 * * *'
-    - cron: '22 2 * * *'
-    - cron: '17 2 * * *'
-    - cron: '12 2 * * *'
-    - cron: '07 2 * * *'
     - cron: '32 2 * * *'  # Original cron time
-    - cron: '37 2 * * *'
-    - cron: '42 2 * * *'
-    - cron: '47 2 * * *'
-    - cron: '52 2 * * *'
   workflow_dispatch:  # Allows manual trigger from GitHub UI
   repository_dispatch:  # Allows API triggers
     types: [manual_trigger]
@@ -118,11 +108,35 @@ jobs:
 
     - name: Run booking script
       run: |
-        python main.py --headless --screenshots
+        python main.py --headless --screenshots --max-workers=3
 
     - name: Generate dashboard
       run: |
         python scripts/generate_dashboard.py
+      env:
+        GITHUB_RUN_NUMBER: ${{ github.run_number }}
+
+    - name: Commit and push screenshots
+      run: |
+        current_date=$(date +%Y-%m-%d)
+        workflow_run="${GITHUB_RUN_NUMBER:-local_run}"
+        screenshot_path="screenshots/${current_date}/workflow_${workflow_run}"
+        
+        if [ -d "$screenshot_path" ]; then
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add "$screenshot_path"
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add screenshots from workflow run ${workflow_run} on ${current_date}"
+            git push
+          fi
+        else
+          echo "No screenshots directory found for current run"
+        fi
 
     - name: Deploy Dashboard
       uses: peaceiris/actions-gh-pages@v3
