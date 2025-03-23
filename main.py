@@ -601,7 +601,7 @@ class CourtBooker:
                 confirmation_element = self.wait.until(
                     EC.presence_of_element_located((
                         By.XPATH, 
-                        "//*[contains(text(), 'confirmed') or contains(text(), 'successful') or contains(text(), 'thank you')]"
+                        "//*[contains(text(), 'complete') or contains(text(), 'successful') or contains(text(), 'thank you')]"
                     ))
                 )
                 self._take_screenshot("booking_confirmed")
