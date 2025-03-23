@@ -411,14 +411,14 @@ class CourtBooker:
                         # Look for the specific time slot
                         time_slots = court_div.find_elements(
                             By.XPATH,
-                            ".//a[contains(@class, 'cart-button')]"
+                            ".//a[contains(@data-tooltip, 'Book Now')]"  # Get all slots with data-tooltip
                         )
-                        
-                        
+
                         for slot in time_slots:
                             slot_text = slot.find_element(By.XPATH, ".//span[1]").text.strip()
                             self.logger.info(f"------------------------Checking time slots: {slot_text}")
-                            slot_status = "success" if "error" not in slot.get_attribute("class") else "error"
+                            # Check if the slot is available (not having 'Unavailable' tooltip)
+                            slot_status = "success" if slot.get_attribute("data-tooltip") != "Unavailable" else "error"
                             
                             # Remove extra spaces and standardize format
                             slot_text = ' '.join(slot_text.split())
