@@ -479,24 +479,75 @@ class CourtBooker:
             reason_field = self.wait.until(EC.presence_of_element_located((By.XPATH, "//input[@id='question150906642']")))
             reason_field.clear()
             reason_field.send_keys(booking_reason)
-            self._take_screenshot("booking_form_filled")  # Add screenshot of filled form
+            self._take_screenshot("booking_form_filled")
 
-            # Proceed to checkout
+            # Step 2: Click first continue button
             continue_buttons = self.driver.find_elements(
                 By.XPATH,
                 "//button[contains(text(), 'Continue') or contains(text(), 'Next')] | " +
                 "//input[@value='Continue' or @value='Next']"
             )
             if continue_buttons:
-                self.logger.info(f"Clicking continue button: '{continue_buttons[0].get_attribute('value') or continue_buttons[0].text}'")
+                self.logger.info("Clicking first continue button")
                 continue_buttons[0].click()
-                time.sleep(1)  # Brief wait for UI update
-                self._take_screenshot("booking_confirmed")  # Add screenshot of confirmation
+                time.sleep(1)
 
-            self.logger.info("Booking finalized successfully")
-            return True
+            # Step 3: Click "Proceed to Checkout" button
+            try:
+                checkout_button = self.wait.until(
+                    EC.element_to_be_clickable((By.ID, "webcart_buttoncheckout"))
+                )
+                self.logger.info("Clicking 'Proceed to Checkout' button")
+                self._take_screenshot("pre_checkout")
+                checkout_button.click()
+                time.sleep(1)
+            except Exception as e:
+                self.logger.error(f"Failed to click checkout button: {str(e)}")
+                raise
+
+            # Step 4: Click final continue button on checkout page
+            try:
+                final_continue = self.wait.until(
+                    EC.element_to_be_clickable((By.ID, "webcheckout_buttoncontinue"))
+                )
+                self.logger.info("Clicking final continue button")
+                self._take_screenshot("pre_final_confirmation")
+                final_continue.click()
+                time.sleep(1)
+            except Exception as e:
+                self.logger.error(f"Failed to click final continue button: {str(e)}")
+                raise
+
+            # Step 5: Verify booking confirmation
+            try:
+                confirmation_element = self.wait.until(
+                    EC.presence_of_element_located((
+                        By.XPATH, 
+                        "//*[contains(text(), 'confirmed') or contains(text(), 'successful') or contains(text(), 'thank you')]"
+                    ))
+                )
+                self._take_screenshot("booking_confirmed")
+                self.logger.info("Booking confirmed successfully")
+                
+                # Try to capture confirmation number if available
+                try:
+                    confirmation_number = self.driver.find_element(
+                        By.XPATH,
+                        "//*[contains(text(), 'Confirmation') or contains(text(), 'Reference')]/following::*[1]"
+                    ).text
+                    self.logger.info(f"Booking confirmation number: {confirmation_number}")
+                except NoSuchElementException:
+                    self.logger.info("No confirmation number found")
+                    
+                return True
+                
+            except TimeoutException:
+                self.logger.error("Could not verify booking confirmation")
+                self._take_screenshot("confirmation_error")
+                return False
+
         except Exception as e:
-            self._take_screenshot("finalization_error")  # Add screenshot on finalization error
+            self._take_screenshot("finalization_error")
             self.logger.error(f"Failed to finalize booking: {str(e)}")
             return False
 
