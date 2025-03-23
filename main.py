@@ -353,31 +353,25 @@ class CourtBooker:
 
             self.logger.info(f"Looking for {facility_type} court (preferred court #{court_number if court_number else 'any'})")
 
-            # Clear any existing cart items first
-            try:
-                cart_clear_buttons = self.driver.find_elements(
-                    By.XPATH, 
-                    "//button[contains(@class, 'cart-button') and contains(@class, 'remove')]"
-                )
-                for button in cart_clear_buttons:
-                    button.click()
-                    time.sleep(0.5)
-            except Exception as e:
-                self.logger.info(f"No existing cart items to clear: {str(e)}")
-
-            # Parse time
-            hour, minute = self._parse_time(desired_time)
-            am_pm = "am" if hour < 12 else "pm"
-            next_hour = (hour + 1) % 24
-            next_am_pm = "am" if next_hour < 12 else "pm"
-
-            # Format time strings for matching
-            time_formats = [
-                f"{hour % 12 or 12}:00 {am_pm} - {next_hour % 12 or 12}:00 {next_am_pm}",
-                f"{hour % 12 or 12}:{minute:02d} {am_pm} - {next_hour % 12 or 12}:{minute:02d} {next_am_pm}",
-                f"{hour % 12 or 12}:00 {am_pm}",
-                f"{hour % 12 or 12} {am_pm}",
-            ]
+            # Parse desired time for one-hour slot
+            start_hour, _ = self._parse_time(desired_time)
+            end_hour = (start_hour + 1) % 24
+            
+            # Format the target time slot string
+            if start_hour < 12:
+                start_period = "am"
+            else:
+                start_period = "pm"
+                start_hour = start_hour % 12 if start_hour % 12 != 0 else 12
+                
+            if end_hour < 12:
+                end_period = "am"
+            else:
+                end_period = "pm"
+                end_hour = end_hour % 12 if end_hour % 12 != 0 else 12
+                
+            target_time_slot = f"{start_hour}:00 {start_period} - {end_hour}:00 {end_period}"
+            self.logger.info(f"Looking for time slot: {target_time_slot}")
 
             # Wait for search results
             self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "dateblock")))
@@ -413,24 +407,26 @@ class CourtBooker:
                         if "pickle" in facility_type and "pickle" in court_text:
                             score += 30
 
-                    if score > best_score:
-                        # Look for available time slot
+                    if score > 0:
+                        # Look for the specific time slot
                         time_slots = court_div.find_elements(
                             By.XPATH,
-                            ".//a[contains(@class, 'button') and contains(@class, 'cart-button')]"
+                            ".//a[contains(@class, 'cart-button')]"
                         )
                         
                         for slot in time_slots:
-                            if "success" in slot.get_attribute("class"):
-                                slot_text = slot.text.strip()
-                                for time_format in time_formats:
-                                    if time_format.lower() in slot_text.lower():
-                                        best_score = score
-                                        best_match = court_title
-                                        best_slot = slot
-                                        best_time = slot_text
-                                        break
-                                if best_slot:  # Break if we found a matching slot
+                            slot_text = slot.find_element(By.XPATH, ".//span[1]").text.strip()
+                            slot_status = "success" if "error" not in slot.get_attribute("class") else "error"
+                            
+                            # Remove extra spaces and standardize format
+                            slot_text = ' '.join(slot_text.split())
+                            
+                            if slot_text.lower() == target_time_slot.lower() and slot_status == "success":
+                                if score > best_score:
+                                    best_score = score
+                                    best_match = court_title
+                                    best_slot = slot
+                                    best_time = slot_text
                                     break
 
                 except NoSuchElementException:
@@ -453,7 +449,7 @@ class CourtBooker:
 
                 return True
             else:
-                self.logger.error(f"No {facility_type} courts found with available slots matching {desired_time}")
+                self.logger.error(f"No {facility_type} courts found with available slot at {target_time_slot}")
                 return False
 
         except Exception as e:
