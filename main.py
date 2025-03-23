@@ -188,31 +188,68 @@ class CourtBooker:
             self.driver.quit()
 
     def _login(self):
-        """User-specific login implementation."""
+        """User-specific login implementation with cart checking and clearing."""
         try:
             login_info = self.config['login']
             self.driver.get(login_info['url'])
-            self._take_screenshot("login_page")  # Add screenshot before login
+            self._take_screenshot("login_page")
 
             # Login form interaction
             self.wait.until(EC.presence_of_element_located((By.ID, 'weblogin_username'))).send_keys(login_info['username'])
             self.driver.find_element(By.ID, 'weblogin_password').send_keys(login_info['password'])
-            self._take_screenshot("login_form_filled")  # Add screenshot after filling form
+            self._take_screenshot("login_form_filled")
             self.driver.find_element(By.ID, 'weblogin_buttonlogin').click()
 
             # Handle session warnings
             try:
                 self.wait.until(EC.presence_of_element_located((By.ID, 'loginresumesession_buttoncontinue'))).click()
-                self._take_screenshot("session_warning")  # Add screenshot if session warning appears
+                self._take_screenshot("session_warning")
             except TimeoutException:
                 pass
 
+            # Check and clear cart if items exist
+            try:
+                cart_items = self.driver.find_elements(
+                    By.XPATH,
+                    "//a[contains(@class, 'menuitem--has-twolines') and contains(@href, 'cart.html')]//span[contains(text(), 'Cart')]"
+                )
+                
+                if cart_items and any('Items' in item.text for item in cart_items):
+                    self.logger.info("Found existing items in cart")
+                    
+                    # Click on cart
+                    cart_items[0].click()
+                    time.sleep(1)
+                    
+                    # Click Empty Cart button
+                    empty_cart_button = self.wait.until(
+                        EC.element_to_be_clickable((By.ID, "webcart_buttonemptycart"))
+                    )
+                    empty_cart_button.click()
+                    self.logger.info("Cart cleared")
+                    time.sleep(1)
+                    
+                    # Click Home
+                    home_link = self.wait.until(
+                        EC.element_to_be_clickable((
+                            By.XPATH,
+                            "//a[contains(@class, 'menuitem')]//span[contains(@class, 'menuitem__text') and text()='Home']"
+                        ))
+                    )
+                    home_link.click()
+                    self.logger.info("Navigated back to home")
+                    time.sleep(1)
+            except Exception as e:
+                self.logger.warning(f"Cart check/clear process encountered an issue: {str(e)}")
+                # Continue with the login process even if cart clearing fails
+
             self.logged_in = True
-            self._take_screenshot("login_success")  # Add screenshot after successful login
+            self._take_screenshot("login_success")
             self.logger.info("Login successful")
             return True
+            
         except Exception as e:
-            self._take_screenshot("login_error")  # Add screenshot on login error
+            self._take_screenshot("login_error")
             self.logger.error(f"Login failed: {str(e)}")
             return False
 
@@ -308,13 +345,25 @@ class CourtBooker:
             return False
 
     def _select_court(self):
-        """Select a court and time slot based on the sport type in the config file."""
+        """Select a single court and time slot based on the sport type in the config file."""
         try:
             desired_time = self.config['booking']['time']
             facility_type = self.config['booking']['facility'].lower()
             court_number = self.config['booking'].get('court_number', '')
 
             self.logger.info(f"Looking for {facility_type} court (preferred court #{court_number if court_number else 'any'})")
+
+            # Clear any existing cart items first
+            try:
+                cart_clear_buttons = self.driver.find_elements(
+                    By.XPATH, 
+                    "//button[contains(@class, 'cart-button') and contains(@class, 'remove')]"
+                )
+                for button in cart_clear_buttons:
+                    button.click()
+                    time.sleep(0.5)
+            except Exception as e:
+                self.logger.info(f"No existing cart items to clear: {str(e)}")
 
             # Parse time
             hour, minute = self._parse_time(desired_time)
@@ -338,48 +387,77 @@ class CourtBooker:
             result_contents = self.driver.find_elements(By.CLASS_NAME, "result-content")
             self.logger.info(f"Found {len(result_contents)} court options")
 
-            # Find matching courts
-            court_matches = self._find_matching_courts(result_contents, facility_type, court_number, time_formats)
-            if not court_matches:
-                self.logger.error(f"No {facility_type} courts found with available slots matching {hour % 12 or 12}:{minute:02d} {am_pm}")
+            # Find best matching court
+            best_match = None
+            best_score = -1
+            best_slot = None
+            best_time = None
+
+            for court_div in result_contents:
+                try:
+                    court_title = court_div.find_element(By.XPATH, ".//h2/span").text
+                    court_description = court_div.find_element(
+                        By.XPATH, 
+                        ".//div[contains(@class, 'result-header__description')]"
+                    ).text
+                    court_text = (court_title + " " + court_description).lower()
+                    
+                    # Calculate court score
+                    score = 0
+                    if facility_type in court_text:
+                        score += 100
+                        if court_number and f"{facility_type} {court_number}" in court_text:
+                            score += 50
+                        if "badminton" in facility_type and "badminton" in court_text:
+                            score += 30
+                        if "pickle" in facility_type and "pickle" in court_text:
+                            score += 30
+
+                    if score > best_score:
+                        # Look for available time slot
+                        time_slots = court_div.find_elements(
+                            By.XPATH,
+                            ".//a[contains(@class, 'button') and contains(@class, 'cart-button')]"
+                        )
+                        
+                        for slot in time_slots:
+                            if "success" in slot.get_attribute("class"):
+                                slot_text = slot.text.strip()
+                                for time_format in time_formats:
+                                    if time_format.lower() in slot_text.lower():
+                                        best_score = score
+                                        best_match = court_title
+                                        best_slot = slot
+                                        best_time = slot_text
+                                        break
+                                if best_slot:  # Break if we found a matching slot
+                                    break
+
+                except NoSuchElementException:
+                    continue
+
+            if best_match and best_slot:
+                self.logger.info(f"Selected court: {best_match} at {best_time}")
+                self._take_screenshot("selected_court")
+                best_slot.click()
+                time.sleep(1)
+
+                # Verify only one item in cart
+                cart_items = self.driver.find_elements(
+                    By.XPATH, 
+                    "//div[contains(@class, 'cart-item')]"
+                )
+                if len(cart_items) > 1:
+                    self.logger.error("Multiple items detected in cart")
+                    return False
+
+                return True
+            else:
+                self.logger.error(f"No {facility_type} courts found with available slots matching {desired_time}")
                 return False
 
-            # Select the best court
-            best_court_name, best_court = sorted(court_matches.items(), key=lambda x: x[1]['score'], reverse=True)[0]
-            self.logger.info(f"Selected best matching court: {best_court_name} (Score: {best_court['score']})")
-
-            # Click on the first available slot
-            selected_slot, slot_time = best_court['slots'][0]
-            self.logger.info(f"Clicking on time slot: {slot_time}")
-            selected_slot.click()
-            time.sleep(1)  # Brief wait for UI update
-            self._take_screenshot("time_slot_selected")  # Add screenshot after slot selection
-
-            # Handle additional confirmation
-            try:
-                if "instant-overlay" in selected_slot.get_attribute("class"):
-                    self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "instant-overlay-content")))
-                    continue_buttons = self.driver.find_elements(
-                        By.XPATH,
-                        "//button[contains(text(), 'Continue') or contains(text(), 'Book') or contains(text(), 'Add to Cart')]"
-                    )
-                    if continue_buttons:
-                        self.logger.info(f"Clicking '{continue_buttons[0].text}' button")
-                        continue_buttons[0].click()
-
-                self.logger.info("Checking if time slot was added to cart")
-                cart_indicators = self.driver.find_elements(By.XPATH, "//a[contains(@class, 'wt-cart-button')]")
-                if cart_indicators:
-                    self.logger.info("Item appears to be added to cart")
-
-            except (TimeoutException, NoSuchElementException) as e:
-                self.logger.info(f"No additional confirmation needed or error occurred: {str(e)}")
-
-            self.logger.info(f"{best_court_name} at {slot_time} selected and added to cart successfully")
-            return True
-
-        except (TimeoutException, NoSuchElementException) as e:
-            self._take_screenshot("court_selection_error")  # Add screenshot on court selection error
+        except Exception as e:
+            self._take_screenshot("court_selection_error")
             self.logger.error(f"Failed to select court and time: {str(e)}")
             return False
 
