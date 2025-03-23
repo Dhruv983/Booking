@@ -138,6 +138,22 @@ jobs:
           echo "No screenshots directory found for current run"
         fi
 
+    - name: Generate Dashboard
+      if: always()
+      run: |
+        python dashboard.py
+
+    - name: Deploy Dashboard
+      if: always()
+      run: |
+        git add dashboard/
+        if git diff --staged --quiet; then
+          echo "No dashboard changes to commit"
+        else
+          git commit -m "Update dashboard for workflow run ${GITHUB_RUN_NUMBER}"
+          git push
+        fi
+
     - name: Deploy Dashboard
       uses: peaceiris/actions-gh-pages@v3
       with:
