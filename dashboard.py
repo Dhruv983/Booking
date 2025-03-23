@@ -17,7 +17,7 @@ class ScreenshotDashboard:
         os.makedirs(self.template_dir, exist_ok=True)
 
     def get_screenshot_data(self):
-        """Get screenshots organized by date and user."""
+        """Get screenshots organized by date and user, showing only booking confirmations."""
         data = {}
         
         # Get all date directories
@@ -48,19 +48,33 @@ class ScreenshotDashboard:
                             if user not in data[date]:
                                 data[date][user] = []
                             
-                            # Get all screenshots for this user
-                            screenshots = sorted(glob.glob(f"{user_dir}/*.png"))
+                            # Get only booking confirmation screenshots
+                            confirmation_shots = sorted(glob.glob(f"{user_dir}/*booking_confirmed*.png"))
+                            if not confirmation_shots:  # If no confirmation, try looking for finalization
+                                confirmation_shots = sorted(glob.glob(f"{user_dir}/*finalization*.png"))
                             
-                            # Create GitHub Pages compatible paths
-                            rel_screenshots = [
-                                f"/{self.repo_name}/screenshots/{os.path.relpath(s, self.screenshots_dir)}"
-                                for s in screenshots
-                            ]
-                            data[date][user].extend(rel_screenshots)
+                            if confirmation_shots:  # Only add if confirmation screenshots exist
+                                # Create GitHub Pages compatible paths
+                                rel_screenshots = [
+                                    f"/{self.repo_name}/screenshots/{os.path.relpath(s, self.screenshots_dir)}"
+                                    for s in confirmation_shots
+                                ]
+                                data[date][user].extend(rel_screenshots)
                             
             except ValueError:
                 continue
                 
+        # Clean up empty dates and users
+        data = {
+            date: {
+                user: screenshots 
+                for user, screenshots in users.items() 
+                if screenshots
+            }
+            for date, users in data.items()
+        }
+        data = {date: users for date, users in data.items() if users}
+        
         return data
 
     def generate_dashboard(self):
