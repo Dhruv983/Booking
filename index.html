@@ -1,231 +1,201 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Court Booking Status</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Booking Screenshots Dashboard</title>
     <style>
-        :root {
-            --success: #4CAF50;
-            --failed: #f44336;
-            --pending: #ffeb3b;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .dashboard-section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .countdown {
-            text-align: center;
-            font-size: 1.5em;
-            margin: 20px 0;
-        }
-
-        .status-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .status-table th, .status-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .status-table tr.success {
-            background-color: var(--success);
-            color: white;
-        }
-
-        .status-table tr.failed {
-            background-color: var(--failed);
-            color: white;
-        }
-
-        .manual-trigger {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .date-section { margin-bottom: 30px; }
+        .date-header { 
+            background: #f0f0f0; 
+            padding: 10px; 
+            margin-bottom: 15px;
             border-radius: 5px;
+        }
+        .user-section { margin-bottom: 20px; }
+        .user-header { 
+            background: #e0e0e0; 
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .screenshots { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+        .screenshot {
+            position: relative;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
         }
-
-        button:hover {
-            background-color: #0056b3;
+        .screenshot img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        .screenshot:hover img {
+            transform: scale(1.05);
+            transition: transform 0.2s;
         }
-
-        .last-run {
-            margin: 10px 0;
-            color: #666;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-section">
-        <h1><i class="fas fa-calendar-alt"></i> Court Booking Automation</h1>
-        
-        <div class="countdown">
-            Next scheduled run in: <span id="countdown">00:00:00</span>
+    <h1>Booking Screenshots Dashboard</h1>
+    
+    <div class="date-section">
+        <div class="date-header">
+            <h2>2025-03-23</h2>
         </div>
-
-        <div class="manual-trigger">
-            <button onclick="triggerScript()" id="triggerButton">
-                <i class="fas fa-play-circle"></i> Run Now
-            </button>
-            <div class="last-run">
-                Last manual run: <span id="lastManualRun">Never</span>
+        
+        <div class="user-section">
+            <div class="user-header">
+                <h3>USER2</h3>
+            </div>
+            <div class="screenshots">
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/booking_page_020250_dc91e1a4.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/booking_page_020250_dc91e1a4.png" alt="booking_page_020250_dc91e1a4.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_form_filled_020235_cbb48905.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_form_filled_020235_cbb48905.png" alt="login_form_filled_020235_cbb48905.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_page_020235_9813dc63.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_page_020235_9813dc63.png" alt="login_page_020235_9813dc63.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_success_020247_625c20f3.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/login_success_020247_625c20f3.png" alt="login_success_020247_625c20f3.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/post_date_selection_020255_f585ff14.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/post_date_selection_020255_f585ff14.png" alt="post_date_selection_020255_f585ff14.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/pre_date_selection_020250_39ad5f3b.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/pre_date_selection_020250_39ad5f3b.png" alt="pre_date_selection_020250_39ad5f3b.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER2/pre_navigation_020247_a960724d.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER2/pre_navigation_020247_a960724d.png" alt="pre_navigation_020247_a960724d.png">
+                </div>
+                
             </div>
         </div>
-
-        <div id="status-container">
-            <table class="status-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Status</th>
-                        <th>Last Run</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="status-body">
-                    <!-- Dynamic content will be inserted here -->
-                </tbody>
-            </table>
+        
+        <div class="user-section">
+            <div class="user-header">
+                <h3>USER1</h3>
+            </div>
+            <div class="screenshots">
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/booking_page_020251_585bf05e.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/booking_page_020251_585bf05e.png" alt="booking_page_020251_585bf05e.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_form_filled_020235_109baca6.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_form_filled_020235_109baca6.png" alt="login_form_filled_020235_109baca6.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_page_020235_1ed5930a.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_page_020235_1ed5930a.png" alt="login_page_020235_1ed5930a.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_success_020247_e1692258.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/login_success_020247_e1692258.png" alt="login_success_020247_e1692258.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/post_date_selection_020256_bb31dd24.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/post_date_selection_020256_bb31dd24.png" alt="post_date_selection_020256_bb31dd24.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/pre_date_selection_020251_c2b34f4a.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/pre_date_selection_020251_c2b34f4a.png" alt="pre_date_selection_020251_c2b34f4a.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER1/pre_navigation_020247_9b78ca8e.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER1/pre_navigation_020247_9b78ca8e.png" alt="pre_navigation_020247_9b78ca8e.png">
+                </div>
+                
+            </div>
         </div>
+        
+        <div class="user-section">
+            <div class="user-header">
+                <h3>USER3</h3>
+            </div>
+            <div class="screenshots">
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/booking_page_020251_aef398fc.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/booking_page_020251_aef398fc.png" alt="booking_page_020251_aef398fc.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_form_filled_020235_3afd4092.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_form_filled_020235_3afd4092.png" alt="login_form_filled_020235_3afd4092.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_page_020235_884e6288.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_page_020235_884e6288.png" alt="login_page_020235_884e6288.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_success_020247_59c14c0c.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/login_success_020247_59c14c0c.png" alt="login_success_020247_59c14c0c.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/post_date_selection_020256_e5936aff.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/post_date_selection_020256_e5936aff.png" alt="post_date_selection_020256_e5936aff.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/pre_date_selection_020251_9041e768.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/pre_date_selection_020251_9041e768.png" alt="pre_date_selection_020251_9041e768.png">
+                </div>
+                
+                <div class="screenshot" onclick="showModal('../screenshots/2025-03-23/workflow_96/process_2039/USER3/pre_navigation_020247_e043513c.png')">
+                    <img src="../screenshots/2025-03-23/workflow_96/process_2039/USER3/pre_navigation_020247_e043513c.png" alt="pre_navigation_020247_e043513c.png">
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+    
+
+    <div id="imageModal" class="modal" onclick="hideModal()">
+        <img class="modal-content" id="modalImage">
     </div>
 
     <script>
-        // Countdown timer calculation
-        function updateCountdown() {
-            const now = new Date();
-            const nextRun = new Date(now);
-            
-            // Set target time to 03:30 UTC (12:00 AM Newfoundland time)
-            nextRun.setUTCHours(3, 30, 0, 0);
-            if (now > nextRun) {
-                nextRun.setUTCDate(nextRun.getUTCDate() + 1);
-            }
-
-            const diff = nextRun - now;
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            document.getElementById('countdown').textContent = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        function showModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = imageSrc;
         }
 
-        // Update countdown every second
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-
-        // Manual trigger function
-        async function triggerScript() {
-            const button = document.getElementById('triggerButton');
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
-
-            try {
-                console.log('Attempting to trigger workflow...');
-                const response = await fetch('https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/dispatches', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `token ${PAT_TOKEN}`,
-                        'Accept': 'application/vnd.github.everest-preview+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        event_type: 'manual_trigger',
-                        client_payload: {
-                            source: 'dashboard'
-                        }
-                    })
-                });
-
-                console.log('Response status:', response.status);
-                const responseBody = await response.text();
-                console.log('Response body:', responseBody);
-
-                if (response.status === 204) {
-                    console.log('Trigger successful');
-                    document.getElementById('lastManualRun').textContent = new Date().toLocaleString();
-                    setTimeout(() => {
-                        location.reload();
-                    }, 30000);
-                } else {
-                    console.error('Trigger failed:', response.statusText);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-play-circle"></i> Run Now';
-            }
+        function hideModal() {
+            document.getElementById('imageModal').style.display = "none";
         }
-
-        // Status updater
-        async function refreshStatus() {
-            try {
-                const response = await fetch('status.json');
-                const data = await response.json();
-                
-                const tbody = document.getElementById('status-body');
-                tbody.innerHTML = '';
-                
-                data.forEach(entry => {
-                    const row = document.createElement('tr');
-                    row.className = entry.status.toLowerCase();
-                    
-                    row.innerHTML = `
-                        <td>${entry.user}</td>
-                        <td><i class="${getStatusIcon(entry.status)}"></i> ${entry.status}</td>
-                        <td>${new Date(entry.timestamp).toLocaleString()}</td>
-                        <td>${entry.details || ''}</td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error fetching status:', error);
-            }
-        }
-
-        function getStatusIcon(status) {
-            return {
-                'Success': 'fas fa-check-circle',
-                'Failed': 'fas fa-times-circle',
-                'Pending': 'fas fa-clock'
-            }[status] || 'fas fa-question-circle';
-        }
-
-        // Refresh status every 30 seconds
-        refreshStatus();
-        setInterval(refreshStatus, 30000);
     </script>
 </body>
 </html>
