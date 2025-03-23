@@ -1,4 +1,4 @@
 config.ini
-logs/
+logs/*.log
 __pycache__/
 *.log

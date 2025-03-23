@@ -46,28 +46,43 @@ class CourtBooker:
         logger = logging.getLogger(self.user_prefix)
         logger.setLevel(logging.DEBUG)
 
-        # Create logs directory if it doesn't exist
-        if not os.path.exists('logs'):
-            os.makedirs('logs')
+        try:
+            # Create logs directory if it doesn't exist (thread-safe)
+            os.makedirs('logs', exist_ok=True)
 
-        # Create a file handler
-        file_handler = logging.FileHandler(f'logs/{self.user_prefix}.log')
-        file_handler.setLevel(logging.DEBUG)
+            # Remove existing handlers if any
+            if logger.hasHandlers():
+                logger.handlers.clear()
 
-        # Create a console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG if not suppress_console else logging.ERROR)
+            # Create a file handler with unique filename using timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_file = f'logs/{self.user_prefix}_{timestamp}.log'
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(logging.DEBUG)
 
-        # Create a formatter and set it for both handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
+            # Create a console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG if not suppress_console else logging.ERROR)
 
-        # Add the handlers to the logger
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
+            # Create a formatter and set it for both handlers
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            console_handler.setFormatter(formatter)
 
-        return logger
+            # Add the handlers to the logger
+            logger.addHandler(file_handler)
+            logger.addHandler(console_handler)
+
+            return logger
+        except Exception as e:
+            # Fallback to console-only logging if file setup fails
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+            logger.error(f"Failed to setup file logging: {str(e)}")
+            return logger
 
     def _load_config(self):
         """Load configuration for a specific user from the config file."""
