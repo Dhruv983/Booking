@@ -1,8 +1,8 @@
 name: Court Booking Automation
 
 on:
-  schedule:
-    - cron: '32 2 * * *'  # Original cron time
+  #schedule:
+    #- cron: '32 2 * * *'  # Original cron time
   workflow_dispatch:  # Allows manual trigger from GitHub UI
   repository_dispatch:  # Allows API triggers
     types: [manual_trigger]
